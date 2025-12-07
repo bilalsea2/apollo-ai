@@ -283,7 +283,7 @@ const statusColors = {
 
 ---
 
-## Typography
+##  
 
 ### Font Families
 

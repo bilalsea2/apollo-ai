@@ -224,13 +224,55 @@ export default function DemoPage() {
             </nav>
 
             <main className="pt-24 pb-12 px-4 max-w-4xl mx-auto relative z-10">
-                <div className="text-center mb-12 space-y-4">
+                <div className="text-center mb-8 space-y-4">
                     <h1 className="text-4xl font-bold tracking-tight text-neutral-900">
                         Plant Stress Detection
                     </h1>
                     <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
                         Upload an image of a crop leaf to detect potential stress, disease, or nutrient deficiencies using our standard computer vision model.
                     </p>
+                </div>
+
+                {/* Project Video & Description */}
+                <div className="mb-12 space-y-8">
+                    <div className="relative aspect-video w-full rounded-xl overflow-hidden shadow-2xl border border-neutral-200 bg-black">
+                        <iframe
+                            src="https://www.loom.com/embed/8413cd210cb64dd1837e6442341f00a6?sid=93b8273a-6859-4670-b74a-25d259521740"
+                            frameBorder="0"
+                            allowFullScreen
+                            className="absolute inset-0 w-full h-full"
+                        ></iframe>
+                    </div>
+
+                    <Card className="p-8 bg-white/50 backdrop-blur border-green-100">
+                        <h2 className="text-2xl font-bold text-neutral-900 mb-4">About This Demo</h2>
+                        <div className="space-y-4 text-neutral-700 leading-relaxed">
+                            <p>
+                                <strong>The Problem:</strong> Traditional disease detection takes too long, and time is crucial—diseases need to be treated in early stages.
+                            </p>
+                            <p>
+                                <strong>Our &quot;Hack&quot;:</strong> We speed up the process to a matter of seconds. By using AI, we make instant diagnosis possible.
+                            </p>
+                            <p>
+                                <strong>The Technology:</strong> We trained our model using the <strong>ResNet-18 architecture</strong> and the <strong>PlantVillage dataset</strong> (70k+ images of 38 leaf condition types).
+                            </p>
+                            <div className="bg-green-50/80 p-4 rounded-lg border border-green-100 my-4">
+                                <p className="font-semibold text-green-900 mb-2">💡 In this video demonstration:</p>
+                                <ul className="list-disc list-inside space-y-1 text-sm text-green-800">
+                                    <li>Husan showcases the model detecting a <strong>healthy corn</strong> leaf.</li>
+                                    <li>The model identifies <strong>grape leaf blight</strong> with near 100% confidence.</li>
+                                </ul>
+                            </div>
+                            <p>
+                                <strong>Future Roadmap:</strong> We plan to implement <strong>hyperspectral and thermal imaging</strong> integrated with drones. We are also working on a <strong>Telegram bot</strong> to let many Uzbek farmers access our platform easily.
+                            </p>
+                            <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-200/50 mt-4">
+                                <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">ResNet-18</span>
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">PlantVillage (70k+)</span>
+                                <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">Telegram Bot API</span>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8 items-start">

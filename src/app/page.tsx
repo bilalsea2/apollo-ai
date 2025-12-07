@@ -71,15 +71,13 @@ const teamMembers = [
 ];
 
 const techStack = [
-  { icon: Leaf, title: "VARI Index", desc: "Visible Atmospherically Resistant Index for vegetation analysis" },
-  { icon: BarChart3, title: "GLI & ExG", desc: "Green Leaf Index and Excess Green for chlorophyll detection" },
-  { icon: Brain, title: "CNN Model", desc: "Convolutional Neural Network for stress classification" },
-  { icon: FileText, title: "LLM Reports", desc: "AI-generated actionable insights and recommendations" },
-  { icon: Map, title: "Heatmaps", desc: "Visual stress distribution mapping across crop fields" }
+{ icon: Leaf, title: "PlantVillage", desc: "PlantVillage is a dataset of 38 types of leaves with diseases" },
+{ icon: Brain, title: "CNN Model", desc: "Convolutional Neural Network for stress/disease classification" },
+{ icon: FileText, title: "LLM Reports", desc: "AI-generated insights and recommendations by our AI-chatbot" }
 ];
 
 const roadmapSteps = [
-  { phase: "Phase 1", title: "MVP", status: "current", items: ["Image upload", "Basic stress detection", "Heatmap visualization"] },
+  { phase: "Phase 1", title: "MVP", status: "current", items: ["Image upload", "Basic stress/disease detection", "Diagnostic reports"] },
   { phase: "Phase 2", title: "Enhancement", status: "upcoming", items: ["Multi-crop support", "Historical analysis", "Mobile app"] },
   { phase: "Phase 3", title: "Scale", status: "future", items: ["Drone integration", "Real-time monitoring", "API access"] }
 ];
@@ -92,9 +90,9 @@ const AnimatedSection = ({ children, className = "" }: { children: React.ReactNo
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 60 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={className}
     >
       {children}
@@ -167,7 +165,7 @@ export default function Home() {
               {[
                 { stat: "40%", label: "of global crops lost to pests & disease annually" },
                 { stat: "$220B", label: "economic impact from crop losses worldwide" },
-                { stat: "72hrs", label: "typical delay in manual stress detection" }
+                { stat: "72hrs", label: "typical delay in manual stress/disease detection" }
               ].map((item, i) => (
                 <AnimatedSection key={i}>
                   <GlassCard className="p-6 text-center tech-border">
@@ -192,7 +190,7 @@ export default function Home() {
               {[
                 { icon: Upload, title: "1. Upload", desc: "Capture and upload crop images from phone or drone" },
                 { icon: Cpu, title: "2. Analyze", desc: "AI processes using vegetation indices and CNN model" },
-                { icon: BarChart3, title: "3. Insights", desc: "Get heatmaps, stress levels, and action recommendations" }
+                { icon: BarChart3, title: "3. Insights", desc: "Get diagnosis, confidence scores, and action recommendations" }
               ].map((step, i) => (
                 <AnimatedSection key={i}>
                   <GlassCard className="p-8 text-center tech-border">
@@ -278,9 +276,9 @@ export default function Home() {
 
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                { icon: Target, title: "Precision", desc: "95%+ accuracy using multi-index vegetation analysis" },
-                { icon: Zap, title: "Speed", desc: "Results in under 30 seconds per image" },
-                { icon: Users, title: "Accessibility", desc: "Works with smartphone cameras, no special equipment" }
+                { icon: Target, title: "Precision", desc: "95%+ accuracy using computer vision" },
+                { icon: Zap, title: "Speed", desc: "Results in under 15 seconds per image" },
+                { icon: Users, title: "Accessibility", desc: "Works with smartphone cameras" }
               ].map((item, i) => (
                 <AnimatedSection key={i}>
                   <GlassCard className="p-6 flex items-start gap-4 tech-border">
@@ -398,15 +396,15 @@ export default function Home() {
               <AnimatedSection>
                 <GlassCard className="p-6 tech-border h-full">
                   <h3 className="font-semibold text-lg mb-2">2. Analysis Output</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Stress detection heatmap with severity levels</p>
+                  <p className="text-sm text-muted-foreground mb-4">Stress/disease detection with severity levels</p>
                   <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-green-400/80 via-yellow-400/80 to-red-400/80 aspect-video shadow-inner">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="glass-card rounded-lg p-4 text-center">
-                        <p className="font-semibold mb-2">Sample Heatmap Output</p>
+                        <p className="font-semibold mb-2">Disease Detection Output</p>
                         <div className="flex items-center gap-2 text-xs">
                           <span className="w-4 h-4 bg-green-500 rounded shadow"></span> Healthy
-                          <span className="w-4 h-4 bg-yellow-500 rounded shadow"></span> Moderate
-                          <span className="w-4 h-4 bg-red-500 rounded shadow"></span> Stressed
+                          <span className="w-4 h-4 bg-yellow-500 rounded shadow"></span> Stressed
+                          <span className="w-4 h-4 bg-red-500 rounded shadow"></span> Diseased
                         </div>
                       </div>
                     </div>

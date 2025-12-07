@@ -7,35 +7,148 @@ import { ArrowLeft, Upload, Loader2, AlertTriangle, CheckCircle2, Leaf, AlertOct
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-// import * as onnx from 'onnxruntime-web'; // Uncomment when model is ready
+
+// API Endpoint for the Python Backend
+const API_URL = "http://localhost:8000/predict";
 
 export default function DemoPage() {
     const [image, setImage] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [result, setResult] = useState<any>(null);
     const [dragActive, setDragActive] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    const [backendStatus, setBackendStatus] = useState<"unknown" | "online" | "offline">("unknown");
+    const [loadingText, setLoadingText] = useState("Analyzing...");
 
-    // Simulation mode since we don't have the trained model file yet
-    const simulateAnalysis = () => {
+    useEffect(() => {
+        // Check if backend is alive
+        fetch("http://localhost:8000/health")
+            .then(() => setBackendStatus("online"))
+            .catch(() => setBackendStatus("offline"));
+    }, []);
+
+    useEffect(() => {
+        if (!isAnalyzing) return;
+
+        const messages = [
+            "Scanning leaf structure...",
+            "Detecting stress markers...",
+            "Measuring chlorophyll...",
+            "Rooting through data...",
+            "Photosynthesizing results...",
+            "Consulting botanical limits...",
+            "Calculating confidence..."
+        ];
+
+        let index = 0;
+        setLoadingText(messages[0]);
+
+        const interval = setInterval(() => {
+            index = (index + 1) % messages.length;
+            setLoadingText(messages[index]);
+        }, 4500);
+
+        return () => clearInterval(interval);
+    }, [isAnalyzing]);
+
+    const runAnalysis = async () => {
+        if (!imageFile) return;
         setIsAnalyzing(true);
-        setTimeout(() => {
-            // Random result simulation
-            const scenarios = [
-                { status: "Healthy", confidence: 0.98, color: "text-green-500", icon: CheckCircle2, desc: "Plant shows no signs of stress or disease." },
-                { status: "Water Stress", confidence: 0.89, color: "text-blue-500", icon: Droplets, desc: "Leaves showing signs of dehydration. Irrigation recommended." },
-                { status: "Nutrient Deficiency", confidence: 0.92, color: "text-orange-500", icon: AlertTriangle, desc: "Yellowing leaves indicate potential nitrogen deficiency." },
-                { status: "Blight Disease", confidence: 0.95, color: "text-red-500", icon: AlertOctagon, desc: "Fungal infection detected. Immediate treatment required." },
-            ];
-            const randomResult = scenarios[Math.floor(Math.random() * scenarios.length)];
+        setResult(null);
 
-            setResult(randomResult);
+        const formData = new FormData();
+        formData.append("file", imageFile);
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            // Map backend response to UI format
+            // The backend returns { class: string, confidence: number }
+            const className = data.class;
+            const confidence = data.confidence;
+
+            let status = "Unknown";
+            let color = "text-neutral-500";
+            let Icon = AlertTriangle;
+            let desc = "Condition identified by analysis.";
+
+            if (className.toLowerCase().includes("healthy")) {
+                status = "Healthy";
+                color = "text-green-500";
+                Icon = CheckCircle2;
+                desc = "Plant shows no signs of stress or disease.";
+            } else if (className.toLowerCase().includes("stress") || className.toLowerCase().includes("scorch")) {
+                status = "Water Stress / Scorch";
+                color = "text-blue-500";
+                Icon = Droplets;
+                desc = "Signs of dehydration or environmental stress detected.";
+            } else if (className.toLowerCase().includes("deficiency") || className.toLowerCase().includes("nutrient")) {
+                status = "Nutrient Deficiency";
+                color = "text-orange-500";
+                Icon = AlertTriangle;
+                desc = "Nutrient imbalance detected.";
+            } else {
+                status = "Disease Detected";
+                color = "text-red-500";
+                Icon = AlertOctagon;
+                desc = `Identified: ${className.replace(/_/g, ' ')}`;
+            }
+
+            // Sort all probs to get top 3
+            const allProbs = data.all_probs;
+            const sortedProbs = Object.entries(allProbs)
+                .map(([name, prob]) => ({ name, prob: prob as number }))
+                .sort((a, b) => b.prob - a.prob)
+                .slice(0, 3);
+
+            // Format top results for UI
+            const topResults = sortedProbs.map(item => {
+                let colorClass = "bg-neutral-200";
+                const nameLower = item.name.toLowerCase();
+                if (nameLower.includes("healthy")) colorClass = "bg-green-500";
+                else if (nameLower.includes("stress")) colorClass = "bg-blue-500";
+                else if (nameLower.includes("deficiency")) colorClass = "bg-orange-500";
+                else colorClass = "bg-red-500";
+
+                return {
+                    name: item.name.replace(/_/g, ' ').replace('Tomato', '').trim(), // Clean up name
+                    prob: item.prob,
+                    colorClass
+                };
+            });
+
+            setResult({
+                status,
+                confidence: confidence,
+                color,
+                icon: Icon,
+                desc,
+                className,
+                topResults // Pass top 3 to state
+            });
+
+        } catch (e) {
+            console.error("Analysis failed", e);
+            alert("Analysis failed. Is the Python backend running?");
+            setBackendStatus("offline");
+        } finally {
             setIsAnalyzing(false);
-        }, 2000);
+        }
     };
 
     const handleFile = (file: File) => {
         if (file && file.type.startsWith("image/")) {
+            setImageFile(file);
             const reader = new FileReader();
             reader.onload = (e) => {
                 setImage(e.target?.result as string);
@@ -145,7 +258,7 @@ export default function DemoPage() {
                             size="lg"
                             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold text-lg py-6 shadow-lg shadow-green-600/20"
                             disabled={!image || isAnalyzing}
-                            onClick={simulateAnalysis}
+                            onClick={runAnalysis}
                         >
                             {isAnalyzing ? (
                                 <>
@@ -156,9 +269,19 @@ export default function DemoPage() {
                             )}
                         </Button>
 
-                        <p className="text-xs text-center text-neutral-400">
-                            *Prototype Version: Running in simulation mode (Model not loaded)
-                        </p>
+                        <div className="text-xs text-center">
+                            {backendStatus === "online" ? (
+                                <span className="text-green-600 flex items-center justify-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Backend Connected
+                                </span>
+                            ) : backendStatus === "offline" ? (
+                                <span className="text-red-500 flex items-center justify-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-red-500" /> Backend Offline (Check Terminal)
+                                </span>
+                            ) : (
+                                <span className="text-neutral-400">Checking connection...</span>
+                            )}
+                        </div>
                     </div>
 
                     {/* Results Section */}
@@ -171,14 +294,25 @@ export default function DemoPage() {
                         )}
 
                         {isAnalyzing && (
-                            <div className="space-y-4">
-                                <div className="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
-                                    <div className="h-full bg-green-500 animate-[progress_2s_ease-in-out_infinite] w-full origin-left" />
+                            <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-6 animate-in fade-in duration-500">
+                                <div className="relative">
+                                    <div className="w-20 h-20 rounded-full border-4 border-green-100 flex items-center justify-center">
+                                        <Loader2 className="w-10 h-10 text-green-600 animate-spin" />
+                                    </div>
+                                    <div className="absolute inset-0 border-4 border-t-green-500 rounded-full animate-spin" />
                                 </div>
-                                <div className="grid gap-4">
-                                    {[1, 2, 3].map((i) => (
-                                        <div key={i} className="h-24 bg-white rounded-xl animate-pulse" />
-                                    ))}
+
+                                <div className="space-y-2">
+                                    <h3 className="text-xl font-semibold text-neutral-800 animate-pulse">
+                                        {loadingText}
+                                    </h3>
+                                    <p className="text-sm text-neutral-500">
+                                        Processing image data...
+                                    </p>
+                                </div>
+
+                                <div className="w-full max-w-xs h-2 bg-neutral-100 rounded-full overflow-hidden">
+                                    <div className="h-full bg-green-500 animate-[progress_15s_ease-in-out_infinite] w-full origin-left" />
                                 </div>
                             </div>
                         )}
@@ -188,10 +322,10 @@ export default function DemoPage() {
                                 <Card className="p-6 border-green-100 bg-white/80 backdrop-blur shadow-xl">
                                     <div className="flex items-start justify-between mb-6">
                                         <div>
-                                            <h3 className="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-1">Detected Condition</h3>
+                                            <h3 className="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-1">Analysis Result</h3>
                                             <div className="flex items-center gap-3">
-                                                <result.icon className={cn("w-8 h-8", result.color)} />
-                                                <h2 className={cn("text-3xl font-bold", result.color)}>{result.status}</h2>
+                                                <result.icon className={cn("w-6 h-6", result.color)} />
+                                                <h2 className="text-2xl font-bold text-neutral-800">{result.status}</h2>
                                             </div>
                                         </div>
                                         <div className="text-right">
@@ -200,30 +334,33 @@ export default function DemoPage() {
                                         </div>
                                     </div>
 
-                                    <div className="p-4 rounded-lg bg-neutral-50 border border-neutral-100 text-neutral-700">
+                                    <div className="p-4 rounded-lg bg-neutral-50 border border-neutral-100 text-neutral-700 text-sm leading-relaxed mb-6">
                                         {result.desc}
                                     </div>
-                                </Card>
 
-                                <div className="grid gap-4">
-                                    <h3 className="font-semibold text-neutral-900">Analysis Breakdown</h3>
-                                    {['Healthy', 'Water Stress', 'Nutrient Deficiency', 'Disease'].map((item) => (
-                                        <div key={item} className="flex items-center gap-4 text-sm">
-                                            <span className="w-32 text-neutral-600">{item}</span>
-                                            <div className="flex-1 h-2 bg-neutral-100 rounded-full overflow-hidden">
-                                                <div
-                                                    className={cn(
-                                                        "h-full rounded-full transition-all duration-1000",
-                                                        item === result.status ? result.color.replace('text-', 'bg-') : "bg-neutral-200"
-                                                    )}
-                                                    style={{
-                                                        width: item === result.status ? `${result.confidence * 100}%` : `${Math.random() * 15}%`
-                                                    }}
-                                                />
-                                            </div>
+                                    <div className="space-y-3">
+                                        <h3 className="font-semibold text-neutral-900 text-sm">Top 3 Probabilities</h3>
+                                        <div className="space-y-2">
+                                            {result.topResults && result.topResults.map((item: any, idx: number) => (
+                                                <div key={idx} className="bg-white rounded border border-neutral-100 p-2 text-sm flex items-center justify-between">
+                                                    <span className="text-neutral-700 font-medium">{item.name}</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-24 h-2 bg-neutral-100 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={cn("h-full rounded-full", item.colorClass)}
+                                                                style={{ width: `${item.prob * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs text-neutral-500 w-10 text-right">{(item.prob * 100).toFixed(1)}%</span>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                        <p className="text-[10px] text-neutral-400 mt-2 text-center">
+                                            *Values sum to 100%. "Confidence" &gt; 90% indicates a strong match.
+                                        </p>
+                                    </div>
+                                </Card>
                             </div>
                         )}
                     </div>

@@ -94,7 +94,7 @@ const AnimatedSection = ({ children, className = "" }: { children: React.ReactNo
       ref={ref}
       initial={{ opacity: 0, y: 60 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       className={className}
     >
       {children}
@@ -122,7 +122,7 @@ export default function Home() {
         className="fixed top-0 w-full z-50 glass-card border-b border-white/20"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.2 }}
       >
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -145,7 +145,7 @@ export default function Home() {
       {/* Fullscreen 3D Hero Section */}
       <motion.section
         style={{ opacity: heroOpacity }}
-        className="relative h-screen w-full"
+        className="relative h-[90vh] md:h-screen w-full"
       >
         <DroneScanner3D />
       </motion.section>
@@ -382,15 +382,17 @@ export default function Home() {
 
             <div className="grid md:grid-cols-2 gap-8 mb-12">
               <AnimatedSection>
-                <GlassCard className="p-6 tech-border h-full group cursor-pointer hover:bg-green-50/50 transition-colors">
-                  <h3 className="font-semibold text-lg mb-2">1. Upload Interface</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Drag & drop or click to upload crop images</p>
-                  <div className="border-2 border-dashed border-green-300/50 rounded-lg p-8 text-center bg-white/30 group-hover:border-green-500 transition-colors">
-                    <Upload className="h-12 w-12 mx-auto text-green-500/70 mb-4 group-hover:scale-110 transition-transform" />
-                    <p className="text-sm text-muted-foreground mb-2">Drag image here or click to browse</p>
-                    <p className="text-xs text-muted-foreground">Supports: JPG, PNG, TIFF (max 10MB)</p>
-                  </div>
-                </GlassCard>
+                <Link href="/demo" className="block h-full">
+                  <GlassCard className="p-6 tech-border h-full group cursor-pointer hover:bg-green-50/50 transition-colors">
+                    <h3 className="font-semibold text-lg mb-2">1. Upload Interface</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Drag & drop or click to upload crop images</p>
+                    <div className="border-2 border-dashed border-green-300/50 rounded-lg p-8 text-center bg-white/30 group-hover:border-green-500 transition-colors">
+                      <Upload className="h-12 w-12 mx-auto text-green-500/70 mb-4 group-hover:scale-110 transition-transform" />
+                      <p className="text-sm text-muted-foreground mb-2">Drag image here or click to browse</p>
+                      <p className="text-xs text-muted-foreground">Supports: JPG, PNG, TIFF (max 10MB)</p>
+                    </div>
+                  </GlassCard>
+                </Link>
               </AnimatedSection>
 
               <AnimatedSection>
@@ -413,7 +415,7 @@ export default function Home() {
               </AnimatedSection>
             </div>
 
-            <AnimatedSection className="text-center">
+            <div className="text-center mt-8">
               <Link href="/demo" className="inline-block">
                 <button className="group bg-green-600 hover:bg-green-700 text-white rounded-full px-8 h-12 text-lg font-semibold shadow-lg shadow-green-600/20 hover:scale-105 transition-all flex items-center justify-center mx-auto gap-3 cursor-pointer">
                   Try the Live Demo
@@ -422,7 +424,7 @@ export default function Home() {
                   </div>
                 </button>
               </Link>
-            </AnimatedSection>
+            </div>
           </div>
         </section>
 

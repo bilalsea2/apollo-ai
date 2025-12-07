@@ -347,83 +347,95 @@ const InfoPanel = ({ scannedCrops }: { scannedCrops: CropData[] }) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="absolute top-20 right-4 w-44 md:w-56 rounded-xl p-2.5 md:p-3.5 tech-border"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-16 left-0 right-0 mx-4 md:right-4 md:left-auto md:w-56 md:mx-0 rounded-xl tech-border z-30"
             style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.75) 100%)",
+                background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)",
                 backdropFilter: "blur(12px)",
                 border: "1px solid rgba(34, 197, 94, 0.3)",
                 boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)"
             }}
         >
-            <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-gray-200/50">
-                <span className="text-sm md:text-base">📡</span>
-                <span className="font-bold text-green-700 text-xs md:text-sm">DRONE SCAN</span>
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            {/* Desktop Layout (Box) */}
+            <div className="hidden md:block p-3.5">
+                <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-gray-200/50">
+                    <span className="text-base">📡</span>
+                    <span className="font-bold text-green-700 text-sm">DRONE SCAN</span>
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                </div>
+
+                <div className="space-y-1.5 text-sm">
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Status:</span>
+                        <span className="font-semibold text-sm" style={{ color: statusColors[overallStatus] }}>
+                            {statusLabels[overallStatus]}
+                        </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                        <span className="text-gray-700">Coverage:</span>
+                        <span className="font-medium text-gray-900">3m × 3m</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                        <span className="text-gray-700">Crops:</span>
+                        <span className="font-medium text-gray-900">{stats.total}</span>
+                    </div>
+
+                    <div className="pt-1.5 border-t border-gray-200/50 space-y-0.5">
+                        {stats.healthy > 0 && (
+                            <div className="flex justify-between text-green-600">
+                                <span>✅ Healthy</span>
+                                <span className="font-medium">{stats.healthy}</span>
+                            </div>
+                        )}
+                        {stats.moderate > 0 && (
+                            <div className="flex justify-between text-yellow-600">
+                                <span>⚠️ Moderate</span>
+                                <span className="font-medium">{stats.moderate}</span>
+                            </div>
+                        )}
+                        {stats.stressed > 0 && (
+                            <div className="flex justify-between text-red-500">
+                                <span>🚨 Stressed</span>
+                                <span className="font-medium">{stats.stressed}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="pt-1.5 border-t border-gray-200/50">
+                        <div className="text-xs text-gray-700 mb-1">AI Confidence</div>
+                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <motion.div
+                                className="h-full bg-gradient-to-r from-green-400 to-green-600"
+                                initial={{ width: 0 }}
+                                animate={{ width: stats.total > 0 ? `${85 + Math.min(stats.total, 15)}%` : "0%" }}
+                                transition={{ duration: 0.5, ease: "easeOut" }}
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div className="space-y-1.5 text-xs md:text-sm">
-                <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Status:</span>
-                    <span className="font-semibold text-xs md:text-sm" style={{ color: statusColors[overallStatus] }}>
-                        {statusLabels[overallStatus]}
-                    </span>
+            {/* Mobile Layout (Horizontal Bar) */}
+            <div className="md:hidden flex items-center justify-between px-4 py-2 text-xs">
+                <div className="flex items-center gap-2">
+                    <span className="text-sm">📡</span>
+                    <span className="font-bold text-green-700">SCANNING</span>
                 </div>
 
-                <div className="flex justify-between">
-                    <span className="text-gray-700">Coverage:</span>
-                    <span className="font-medium text-gray-900">3m × 3m</span>
+                <div className="h-4 w-px bg-gray-300 mx-2" />
+
+                <div className="flex items-center gap-1 font-semibold" style={{ color: statusColors[overallStatus] }}>
+                    {overallStatus === 'healthy' ? '✅' : overallStatus === 'stressed' ? '🚨' : '⚠️'} {statusLabels[overallStatus].split(' ').pop()}
                 </div>
 
-                <div className="flex justify-between">
-                    <span className="text-gray-700">Crops:</span>
-                    <span className="font-medium text-gray-900">{stats.total}</span>
-                </div>
+                <div className="h-4 w-px bg-gray-300 mx-2" />
 
-                <div className="pt-1.5 border-t border-gray-200/50 space-y-0.5">
-                    {stats.healthy > 0 && (
-                        <div className="flex justify-between text-green-600">
-                            <span>✅ Healthy</span>
-                            <span className="font-medium">{stats.healthy}</span>
-                        </div>
-                    )}
-                    {stats.moderate > 0 && (
-                        <div className="flex justify-between text-yellow-600">
-                            <span>⚠️ Moderate</span>
-                            <span className="font-medium">{stats.moderate}</span>
-                        </div>
-                    )}
-                    {stats.stressed > 0 && (
-                        <div className="flex justify-between text-red-500">
-                            <span>🚨 Stressed</span>
-                            <span className="font-medium">{stats.stressed}</span>
-                        </div>
-                    )}
-                    {stats.nutrientDeficient > 0 && (
-                        <div className="flex justify-between text-orange-500">
-                            <span>🧪 Nutrient</span>
-                            <span className="font-medium">{stats.nutrientDeficient}</span>
-                        </div>
-                    )}
-                    {stats.waterStress > 0 && (
-                        <div className="flex justify-between text-blue-500">
-                            <span>💧 Water</span>
-                            <span className="font-medium">{stats.waterStress}</span>
-                        </div>
-                    )}
-                </div>
-
-                <div className="pt-1.5 border-t border-gray-200/50">
-                    <div className="text-[10px] md:text-xs text-gray-700 mb-1">AI Confidence</div>
-                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <motion.div
-                            className="h-full bg-gradient-to-r from-green-400 to-green-600"
-                            initial={{ width: 0 }}
-                            animate={{ width: stats.total > 0 ? `${85 + Math.min(stats.total, 15)}%` : "0%" }}
-                            transition={{ duration: 0.5, ease: "easeOut" }}
-                        />
-                    </div>
+                <div className="flex items-center gap-1">
+                    <span className="text-gray-600">Crops:</span>
+                    <span className="font-medium">{stats.total}</span>
                 </div>
             </div>
         </motion.div>
@@ -440,7 +452,7 @@ export const DroneScanner3D = () => {
     }, []);
 
     return (
-        <div className="relative w-full h-screen">
+        <div className="relative w-full h-full">
             {/* Sky gradient overlay */}
             <div
                 className="absolute inset-0 pointer-events-none z-10"
@@ -464,8 +476,8 @@ export const DroneScanner3D = () => {
             {/* Info Panel */}
             <InfoPanel scannedCrops={scannedCrops} />
 
-            {/* Hero overlay - Slim version in one line */}
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 w-full max-w-2xl px-4">
+            {/* Hero overlay - Desktop/Tablet version */}
+            <div className="hidden md:block absolute bottom-20 left-1/2 -translate-x-1/2 z-20 w-full max-w-2xl px-4">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -479,9 +491,6 @@ export const DroneScanner3D = () => {
                     }}
                 >
                     <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="inline-block px-3 py-1 rounded-full bg-green-100/80 text-green-800 text-xs font-medium">
-                            🌱 AI500 Hackathon
-                        </div>
                         <h1 className="text-lg font-bold tracking-tight whitespace-nowrap">
                             <span className="text-gray-900">AI-Powered</span>{" "}
                             <span className="text-green-600">Crop Stress</span>{" "}

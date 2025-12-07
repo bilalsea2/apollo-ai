@@ -9,7 +9,10 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 // API Endpoint for the Python Backend
-const API_URL = "http://localhost:8000/predict";
+// For Vercel deployment, we will use a relative path which routes to the serverless function
+const API_URL = process.env.NODE_ENV === "production"
+    ? "/api/predict"
+    : "http://localhost:8000/predict";
 
 export default function DemoPage() {
     const [image, setImage] = useState<string | null>(null);
@@ -23,7 +26,11 @@ export default function DemoPage() {
 
     useEffect(() => {
         // Check if backend is alive
-        fetch("http://localhost:8000/health")
+        const healthUrl = process.env.NODE_ENV === "production"
+            ? "/api/health"
+            : "http://localhost:8000/health";
+
+        fetch(healthUrl)
             .then(() => setBackendStatus("online"))
             .catch(() => setBackendStatus("offline"));
     }, []);

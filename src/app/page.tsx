@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { DroneScanner3D } from "@/components/DroneScanner3D";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,8 @@ import {
   CheckCircle2,
   Cpu,
   FileText,
-  Map
+  Map,
+  ArrowRight
 } from "lucide-react";
 
 const teamMembers = [
@@ -136,7 +138,7 @@ export default function Home() {
             <a href="#tech" className="hover:text-green-600 transition">Tech</a>
             <a href="#demo" className="hover:text-green-600 transition">Demo</a>
           </div>
-          <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50/50">Stage 1</Badge>
+          <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50/50">Stage 2</Badge>
         </div>
       </motion.nav>
 
@@ -340,8 +342,8 @@ export default function Home() {
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${step.status === "current"
-                          ? "bg-green-600 text-white"
-                          : "bg-gray-100 text-gray-600"
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-100 text-gray-600"
                         }`}>
                         {step.phase}
                       </span>
@@ -373,24 +375,20 @@ export default function Home() {
             <AnimatedSection className="text-center mb-12">
               <Badge variant="outline" className="mb-4 bg-white/50">Demo Preview</Badge>
               <h2 className="text-3xl md:text-4xl font-bold mb-4">See It In Action</h2>
+              <p className="text-xl text-neutral-600 max-w-2xl mx-auto">
+                Experience the power of our analysis engine with your own data.
+              </p>
             </AnimatedSection>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
               <AnimatedSection>
-                <GlassCard className="p-6 tech-border h-full">
+                <GlassCard className="p-6 tech-border h-full group cursor-pointer hover:bg-green-50/50 transition-colors">
                   <h3 className="font-semibold text-lg mb-2">1. Upload Interface</h3>
                   <p className="text-sm text-muted-foreground mb-4">Drag & drop or click to upload crop images</p>
-                  <div className="border-2 border-dashed border-green-300/50 rounded-lg p-8 text-center bg-white/30">
-                    <Upload className="h-12 w-12 mx-auto text-green-500/70 mb-4" />
+                  <div className="border-2 border-dashed border-green-300/50 rounded-lg p-8 text-center bg-white/30 group-hover:border-green-500 transition-colors">
+                    <Upload className="h-12 w-12 mx-auto text-green-500/70 mb-4 group-hover:scale-110 transition-transform" />
                     <p className="text-sm text-muted-foreground mb-2">Drag image here or click to browse</p>
                     <p className="text-xs text-muted-foreground">Supports: JPG, PNG, TIFF (max 10MB)</p>
-                    <motion.button
-                      className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Select Image
-                    </motion.button>
                   </div>
                 </GlassCard>
               </AnimatedSection>
@@ -399,7 +397,7 @@ export default function Home() {
                 <GlassCard className="p-6 tech-border h-full">
                   <h3 className="font-semibold text-lg mb-2">2. Analysis Output</h3>
                   <p className="text-sm text-muted-foreground mb-4">Stress detection heatmap with severity levels</p>
-                  <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-green-400/80 via-yellow-400/80 to-red-400/80 aspect-video">
+                  <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-green-400/80 via-yellow-400/80 to-red-400/80 aspect-video shadow-inner">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="glass-card rounded-lg p-4 text-center">
                         <p className="font-semibold mb-2">Sample Heatmap Output</p>
@@ -411,16 +409,20 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 p-3 glass-card rounded-lg">
-                    <p className="text-sm font-medium mb-1">AI Analysis Summary</p>
-                    <p className="text-xs text-muted-foreground">
-                      Detected: 23% moderate stress (nitrogen deficiency), 8% high stress (water stress).
-                      Recommended: Increase irrigation in NW quadrant, apply foliar nitrogen.
-                    </p>
-                  </div>
                 </GlassCard>
               </AnimatedSection>
             </div>
+
+            <AnimatedSection className="text-center">
+              <Link href="/demo" className="inline-block">
+                <button className="group bg-green-600 hover:bg-green-700 text-white rounded-full px-8 h-12 text-lg font-semibold shadow-lg shadow-green-600/20 hover:scale-105 transition-all flex items-center justify-center mx-auto gap-3 cursor-pointer">
+                  Try the Live Demo
+                  <div className="w-6 h-6 flex items-center justify-center bg-white/20 rounded-full group-hover:bg-white/30 transition-colors">
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </div>
+                </button>
+              </Link>
+            </AnimatedSection>
           </div>
         </section>
 
@@ -433,7 +435,7 @@ export default function Home() {
               </div>
               <span className="font-semibold">Apollo AI</span>
             </div>
-            <p className="text-sm text-muted-foreground">Built for AI500 Hackathon 2025 • Stage 1 Submission</p>
+            <p className="text-sm text-muted-foreground">Built for AI500 Hackathon 2025 • Stage 2 Submission</p>
             <div className="flex gap-4">
               <motion.div whileHover={{ scale: 1.2 }}>
                 <Github className="h-5 w-5 text-muted-foreground hover:text-foreground cursor-pointer" />

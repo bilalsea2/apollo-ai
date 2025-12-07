@@ -177,7 +177,7 @@ Small status indicator or label component.
 import { Badge } from "@/components/ui/badge";
 
 <Badge variant="default">New</Badge>
-<Badge variant="outline">Stage 1</Badge>
+<Badge variant="outline">Stage 2</Badge>
 <Badge variant="destructive">Error</Badge>
 ```
 

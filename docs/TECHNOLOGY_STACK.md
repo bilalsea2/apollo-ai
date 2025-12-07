@@ -263,7 +263,7 @@ Complete list of all technologies, packages, and tools used in Apollo AI.
 }
 ```
 
-**Note:** Database setup ready but not actively used in Stage 1 MVP.
+**Note:** Database setup ready but not actively used in Stage 2 MVP.
 
 ## Payments (Ready for Integration)
 

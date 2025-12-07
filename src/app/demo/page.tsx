@@ -7,6 +7,7 @@ import { ArrowLeft, Upload, Loader2, AlertTriangle, CheckCircle2, Leaf, AlertOct
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // API Endpoint for the Python Backend
 // For Vercel deployment, we will use a relative path which routes to the serverless function
@@ -73,8 +74,16 @@ export default function DemoPage() {
                 body: formData,
             });
 
+            if (response.status === 413) {
+                const errorMsg = "Image is too large for the server (Max 4.5MB). Please resize or compress it.";
+                toast.error(errorMsg);
+                throw new Error(errorMsg); // Throw to skip processing but handled in catch
+            }
+
             if (!response.ok) {
-                throw new Error(`API Error: ${response.statusText}`);
+                const errorMsg = `API Error: ${response.status} ${response.statusText}`;
+                toast.error(`Analysis failed: ${response.statusText}`);
+                throw new Error(errorMsg);
             }
 
             const data = await response.json();
@@ -144,10 +153,21 @@ export default function DemoPage() {
                 topResults // Pass top 3 to state
             });
 
-        } catch (e) {
+        } catch (e: any) {
             console.error("Analysis failed", e);
-            alert("Analysis failed. Is the Python backend running?");
-            setBackendStatus("offline");
+
+            // Only mark backend as offline if it's a network error (TypeError) 
+            // and NOT an intentional error we threw above
+            if (e.name === 'TypeError' && e.message.includes('fetch')) {
+                toast.error("Could not connect to the backend server.");
+                setBackendStatus("offline");
+            } else {
+                // If it's not a network error, it's likely an API error we already toasted
+                // or a logic error. We don't want to say backend is offline.
+                if (!e.message.includes("Image is too large") && !e.message.includes("API Error")) {
+                    toast.error("An unexpected error occurred during analysis.");
+                }
+            }
         } finally {
             setIsAnalyzing(false);
         }

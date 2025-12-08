@@ -71,9 +71,9 @@ const teamMembers = [
 ];
 
 const techStack = [
-{ icon: Leaf, title: "PlantVillage", desc: "PlantVillage is a dataset of 38 types of leaves with diseases" },
-{ icon: Brain, title: "CNN Model", desc: "Convolutional Neural Network for stress/disease classification" },
-{ icon: FileText, title: "LLM Reports", desc: "AI-generated insights and recommendations by our AI-chatbot" }
+  { icon: Leaf, title: "PlantVillage", desc: "PlantVillage is a dataset of 38 types of leaves with diseases" },
+  { icon: Brain, title: "CNN Model", desc: "Convolutional Neural Network for stress/disease classification" },
+  { icon: FileText, title: "LLM Reports", desc: "AI-generated insights and recommendations by our AI-chatbot" }
 ];
 
 const roadmapSteps = [
@@ -134,7 +134,7 @@ export default function Home() {
             <a href="#solution" className="hover:text-green-600 transition">Solution</a>
             <a href="#team" className="hover:text-green-600 transition">Team</a>
             <a href="#tech" className="hover:text-green-600 transition">Tech</a>
-            <a href="#demo" className="hover:text-green-600 transition">Demo</a>
+            <a href="/demo" className="hover:text-green-600 transition">Demo</a>
           </div>
           <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50/50">Stage 2</Badge>
         </div>

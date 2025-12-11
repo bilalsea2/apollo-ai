@@ -214,9 +214,13 @@ export default function DemoPage() {
                         <span className="font-medium text-neutral-600 group-hover:text-green-600 transition">Back to Home</span>
                     </Link>
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
-                            <Leaf className="h-5 w-5 text-white" />
-                        </div>
+                        <Image
+                            src="/icon.svg"
+                            alt="Apollo AI Logo"
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 rounded-lg"
+                        />
                         <span className="font-bold text-lg">Apollo AI Demo</span>
                     </div>
                     <div className="w-[100px]" /> {/* Spacer for centering */}

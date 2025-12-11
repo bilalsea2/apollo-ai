@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { DroneScanner3D } from "@/components/DroneScanner3D";
 import { Badge } from "@/components/ui/badge";
@@ -124,9 +125,13 @@ export default function Home() {
       >
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
-              <Leaf className="h-5 w-5 text-white" />
-            </div>
+            <Image
+              src="/icon.svg"
+              alt="Apollo AI Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-lg"
+            />
             <span className="font-bold text-lg">Apollo AI</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm">
@@ -430,9 +435,13 @@ export default function Home() {
         <footer className="py-8 px-4 border-t border-gray-200/50">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-green-600 flex items-center justify-center">
-                <Leaf className="h-4 w-4 text-white" />
-              </div>
+              <Image
+                src="/icon.svg"
+                alt="Apollo AI Logo"
+                width={24}
+                height={24}
+                className="w-6 h-6 rounded-lg"
+              />
               <span className="font-semibold">Apollo AI</span>
             </div>
             <p className="text-sm text-muted-foreground">Built for AI500 Hackathon 2025 • Stage 2 Submission</p>

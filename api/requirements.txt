@@ -4,3 +4,6 @@ python-multipart
 onnxruntime
 numpy
 pillow
+groq
+python-dotenv
+aiogram

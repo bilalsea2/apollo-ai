@@ -118,6 +118,39 @@ async def predict(file: UploadFile = File(...)):
 async def predict_local(file: UploadFile = File(...)):
     return await predict(file)
 
+# ... existing imports
+from pydantic import BaseModel
+
+# Import LLM service
+try:
+    from api.llm import generate_disease_report
+except ImportError:
+    # Fallback for local run if running from root without package structure
+    try:
+        from llm import generate_disease_report
+    except:
+        print("Warning: Could not import LLM service")
+        generate_disease_report = None
+
+# ... existing app and model loading ...
+
+class TextAnalysisRequest(BaseModel):
+    class_name: str
+    confidence: float
+    top_probs: list[str] = None
+
+@app.post("/api/analyze-text")
+async def analyze_text(request: TextAnalysisRequest):
+    if not generate_disease_report:
+        return {"report": "AI Insights unavailable (LLM service not loaded)."}
+    
+    report = generate_disease_report(request.class_name, request.confidence, request.top_probs)
+    return {"report": report}
+
+@app.post("/analyze-text") # Local compat
+async def analyze_text_local(request: TextAnalysisRequest):
+    return await analyze_text(request)
+
 if __name__ == "__main__":
     print("Starting local server...")
     uvicorn.run(app, host="0.0.0.0", port=8000)

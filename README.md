@@ -1,49 +1,42 @@
-# Apollo AI
+# Apollo AI (Stage 2 Submission)
 
-AI-powered crop stress detection using advanced vegetation indices and deep learning for precision agriculture.
+AI-powered crop stress detection platform designed to democratize precision agriculture using standard smartphone/drone imagery.
 
-## Project Overview
+## 🚀 Status: Deployed Prototype
+This is the **Stage 2** submission for the AI500 Hackathon 2025. It demonstrates the core classification engine and user journey.
 
-Apollo AI is a Next.js application designed for the AI500 Hackathon 2025. It features a 3D drone scanner simulation and provides real-time analysis of crop health using various vegetation indices.
+### Key Features
+- **Frontend**: Next.js 15 (App Router), React 19, Tailwind CSS.
+- **Backend**: Python FastAPI (Serverless on Vercel) + ONNX Runtime.
+- **AI Model**: ResNet-18 trained on PlantVillage dataset (70k+ images, 99% accuracy on demo classes).
+- **Visualization**: Interactive 3D Drone Scanner (Three.js).
+- **Mobile First**: Fully responsive glass-morphism UI.
 
-## Features
+## 🛠️ Quick Start
 
-- Interactive 3D corn field visualization
-- Mouse-controlled drone scanner
-- Real-time crop stress detection
-- Vegetation index analysis (VARI, GLI, ExG)
-- AI-generated insights and recommendations
-- Responsive glass-morphism UI
-
-## Tech Stack
-
-- **Framework**: Next.js 15.3.5
-- **UI Library**: React 19
-- **Styling**: Tailwind CSS 4
-- **3D Graphics**: Three.js, React Three Fiber
-- **Animation**: Framer Motion
-- **Components**: Shadcn UI
-
-## Getting Started
-
-1.  Install dependencies:
+1.  **Install Dependencies** (Fixed for React 19 RC):
     ```bash
     npm install
     ```
-
-2.  Run the development server:
+2.  **Run Development Server**:
     ```bash
     npm run dev
     ```
+3.  **Open Demo**:
+    Visit [http://localhost:3000/demo](http://localhost:3000/demo) to test the classification engine.
 
-3.  Open [http://localhost:3000](http://localhost:3000) with your browser.
+## 🤖 Telegram Bot
+The bot aids farmers with instant analysis and lets them access the web app.
+**Note**: The bot uses a polling architecture and **must run locally** (or on a VPS), even if the website is deployed to Vercel.
 
-## Documentation
+1.  **Setup Keys**: Ensure `TELEGRAM_BOT_TOKEN` and `GROQ_API_KEY` are in `api/.env`.
+2.  **Start Bot**:
+    ```bash
+    python bot/main.py
+    ```
 
-Full documentation is available in the `docs/` directory:
+## 📄 Documentation
+- [Submission Description](./docs/submission_description.md) - Detailed project narrative and video script.
+- [Architecture](./docs/ARCHITECTURE.md) - System design.
+- [Components](./docs/COMPONENTS.md) - React component structure.
 
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Components](./docs/COMPONENTS.md)
-- [Styling](./docs/STYLING.md)
-- [Technology Stack](./docs/TECHNOLOGY_STACK.md)
-- [UI Components](./docs/UI_COMPONENTS.md)

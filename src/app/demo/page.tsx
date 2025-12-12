@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Upload, Loader2, AlertTriangle, CheckCircle2, Leaf, AlertOctagon, Droplets } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, AlertTriangle, CheckCircle2, Leaf, AlertOctagon, Droplets, Sparkles, ChevronDown, ChevronUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,11 @@ export default function DemoPage() {
     const inputRef = useRef<HTMLInputElement>(null);
     const [backendStatus, setBackendStatus] = useState<"unknown" | "online" | "offline">("unknown");
     const [loadingText, setLoadingText] = useState("Analyzing...");
+
+    // AI Report State
+    const [aiReport, setAiReport] = useState<string | null>(null);
+    const [reportLoading, setReportLoading] = useState(false);
+    const [showInsights, setShowInsights] = useState(false);
 
     useEffect(() => {
         // Check if backend is alive
@@ -64,6 +69,9 @@ export default function DemoPage() {
         if (!imageFile) return;
         setIsAnalyzing(true);
         setResult(null);
+        setAiReport(null);
+        setReportLoading(false);
+        setShowInsights(false); // Reset insights view
 
         const formData = new FormData();
         formData.append("file", imageFile);
@@ -77,7 +85,7 @@ export default function DemoPage() {
             if (response.status === 413) {
                 const errorMsg = "Image is too large for the server (Max 4.5MB). Please resize or compress it.";
                 toast.error(errorMsg);
-                throw new Error(errorMsg); // Throw to skip processing but handled in catch
+                throw new Error(errorMsg);
             }
 
             if (!response.ok) {
@@ -89,7 +97,6 @@ export default function DemoPage() {
             const data = await response.json();
 
             // Map backend response to UI format
-            // The backend returns { class: string, confidence: number }
             const className = data.class;
             const confidence = data.confidence;
 
@@ -137,11 +144,14 @@ export default function DemoPage() {
                 else colorClass = "bg-red-500";
 
                 return {
-                    name: item.name.replace(/_/g, ' ').replace('Tomato', '').trim(), // Clean up name
+                    name: item.name.replace(/_/g, ' ').replace('Tomato', '').trim(),
                     prob: item.prob,
                     colorClass
                 };
             });
+
+            // Prepare Top 3 text for LLM context
+            const topProbsList = topResults.map(r => `${r.name} (${(r.prob * 100).toFixed(1)}%)`);
 
             setResult({
                 status,
@@ -150,20 +160,45 @@ export default function DemoPage() {
                 icon: Icon,
                 desc,
                 className,
-                topResults // Pass top 3 to state
+                topResults
             });
+
+            // ------------------------------------------
+            // Trigger LLM Report Generation
+            // ------------------------------------------
+            setReportLoading(true);
+
+            // Derive analyze endpoint
+            const analyzeUrl = API_URL.replace("/predict", "/analyze-text");
+
+            fetch(analyzeUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    class_name: className.replace(/_/g, ' '),
+                    confidence: confidence,
+                    top_probs: topProbsList
+                })
+            })
+                .then(res => res.json())
+                .then(aiData => {
+                    setAiReport(aiData.report || "No insights available.");
+                })
+                .catch(err => {
+                    console.error("LLM Error:", err);
+                    setAiReport("Could not generate AI insights at this time.");
+                })
+                .finally(() => {
+                    setReportLoading(false);
+                });
 
         } catch (e: any) {
             console.error("Analysis failed", e);
 
-            // Only mark backend as offline if it's a network error (TypeError) 
-            // and NOT an intentional error we threw above
             if (e.name === 'TypeError' && e.message.includes('fetch')) {
                 toast.error("Could not connect to the backend server.");
                 setBackendStatus("offline");
             } else {
-                // If it's not a network error, it's likely an API error we already toasted
-                // or a logic error. We don't want to say backend is offline.
                 if (!e.message.includes("Image is too large") && !e.message.includes("API Error")) {
                     toast.error("An unexpected error occurred during analysis.");
                 }
@@ -180,6 +215,7 @@ export default function DemoPage() {
             reader.onload = (e) => {
                 setImage(e.target?.result as string);
                 setResult(null);
+                setAiReport(null);
             };
             reader.readAsDataURL(file);
         }
@@ -433,7 +469,61 @@ export default function DemoPage() {
                                             *Values sum to 100%. "Confidence" &gt; 90% indicates a strong match.
                                         </p>
                                     </div>
+
+                                    {/* Toggle Button for Insights */}
+                                    <div className="mt-6 pt-4 border-t border-neutral-100">
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                "w-full gap-2 transition-all duration-300",
+                                                showInsights ? "bg-purple-50 border-purple-200 text-purple-700" : "hover:bg-purple-50 hover:text-purple-600"
+                                            )}
+                                            onClick={() => setShowInsights(true)}
+                                        >
+                                            <Sparkles className="w-4 h-4" />
+                                            View AI Insights
+                                        </Button>
+                                    </div>
                                 </Card>
+
+                                {/* AI Insights Modal */}
+                                {showInsights && (
+                                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowInsights(false)}>
+                                        <Card className="relative w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto bg-white border-purple-100 shadow-2xl animate-in zoom-in-95 duration-200 text-left" onClick={(e) => e.stopPropagation()}>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="absolute top-2 right-2 text-neutral-400 hover:text-neutral-600 rounded-full hover:bg-neutral-100"
+                                                onClick={() => setShowInsights(false)}
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </Button>
+
+                                            <div className="flex items-center gap-2 mb-6 border-b border-purple-100 pb-4">
+                                                <div className="p-2 bg-purple-100 rounded-lg">
+                                                    <Sparkles className="w-5 h-5 text-purple-600" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-neutral-900 text-lg">AI Insights</h3>
+                                                    <p className="text-xs text-purple-600 font-medium">Powered by Apollo LLM</p>
+                                                </div>
+                                            </div>
+
+                                            {reportLoading ? (
+                                                <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+                                                    <div className="relative">
+                                                        <div className="w-12 h-12 rounded-full border-4 border-purple-100 animate-spin border-t-purple-600" />
+                                                    </div>
+                                                    <p className="text-sm text-purple-700 font-medium animate-pulse">Consulting expert database...</p>
+                                                </div>
+                                            ) : (
+                                                <div className="prose prose-purple prose-sm max-w-none text-neutral-700 leading-relaxed whitespace-pre-wrap font-sans">
+                                                    {aiReport || "Insight generation failed or is unavailable."}
+                                                </div>
+                                            )}
+                                        </Card>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

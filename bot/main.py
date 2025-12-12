@@ -147,19 +147,31 @@ async def cmd_help(message: types.Message):
 async def cmd_analyze_prompt(message: types.Message):
     await message.answer("📸 **Please send a clear photo of the crop leaf.**\n\nI will analyze it immediately.", reply_markup=get_main_keyboard(), parse_mode="Markdown")
 
-@dp.message(F.photo)
+@dp.message(F.photo | F.document)
 async def handle_photo(message: types.Message):
     if not session:
         await message.reply("⚠️ AI Model is currently offline. Please contact admin.")
+        return
+
+    # Determine file to download
+    file_obj = None
+    if message.photo:
+        file_obj = message.photo[-1]
+    elif message.document:
+        if not (message.document.mime_type or "").startswith("image/"):
+            await message.reply("⚠️ Please send an **image** file for analysis.")
+            return
+        file_obj = message.document
+    
+    if not file_obj:
         return
 
     status_msg = await message.reply("🔍 Analyzing crop health...")
     
     try:
         # Download photo
-        photo = message.photo[-1]
         file_io = io.BytesIO()
-        await bot.download(photo, destination=file_io)
+        await bot.download(file_obj, destination=file_io)
         file_bytes = file_io.getvalue()
 
         # Inference
@@ -209,6 +221,17 @@ async def handle_photo(message: types.Message):
     except Exception as e:
         logging.error(f"Error processing image: {e}")
         await bot.edit_message_text("❌ An error occurred while processing the image.", chat_id=message.chat.id, message_id=status_msg.message_id)
+
+@dp.message()
+async def handle_unknown(message: types.Message):
+    """Catch-all for debugging and guidance"""
+    logging.info(f"Unhandled message type: {message.content_type}")
+    await message.reply(
+        "❓ **I didn't understand that.**\n\n"
+        "Please send a **Photo** of a crop leaf for analysis, or use the menu buttons below.",
+        reply_markup=get_main_keyboard(),
+        parse_mode="Markdown"
+    )
 
 async def main():
     load_model()

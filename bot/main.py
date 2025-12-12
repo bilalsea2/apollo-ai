@@ -69,11 +69,21 @@ CLASSES = [
 def load_model():
     global session
     try:
-        if not MODEL_PATH.exists():
-            logging.error(f"Model not found at {MODEL_PATH}")
-            return
-        session = ort.InferenceSession(str(MODEL_PATH))
-        logging.info("ONNX Model loaded successfully")
+        # Robust path finding for Vercel
+        base_dir = Path(__file__).parent.parent
+        model_path = base_dir / 'public' / 'models' / 'plant_stress_model.onnx'
+        
+        if not model_path.exists():
+             # Fallback: check same directory or api directory (serverless often flattens)
+             model_path = Path(__file__).parent / 'plant_stress_model.onnx'
+        
+        if not model_path.exists():
+             logging.warning(f"Model not found at {model_path}, trying absolute fallback")
+             # Last ditch: look in current working directory
+             model_path = Path('plant_stress_model.onnx')
+
+        session = ort.InferenceSession(str(model_path))
+        logging.info(f"ONNX Model loaded successfully from {model_path}")
     except Exception as e:
         logging.error(f"Failed to load model: {e}")
 

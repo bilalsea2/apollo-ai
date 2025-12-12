@@ -1,11 +1,25 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import onnxruntime as ort
 import numpy as np
 from PIL import Image
 import io
 import os
+import sys
 import uvicorn
+from pydantic import BaseModel
+
+# Add project root to sys.path to allow importing from bot
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import Bot components (graceful fallback)
+try:
+    from bot.main import bot, dp, load_model as load_bot_model
+    from aiogram import types
+except ImportError as e:
+    print(f"Warning: Could not import bot components: {e}")
+    bot = None
+    dp = None
 
 app = FastAPI()
 
@@ -18,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Classes list
+# Classes list (Same as bot/main.py, ideally shared)
 CLASSES = [
     'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
     'Blueberry___healthy', 'Cherry_(including_sour)___Powdery_mildew',
@@ -35,8 +49,9 @@ CLASSES = [
     'Tomato___healthy'
 ]
 
-# Load Model
+# Load API Model (Separate session from Bot to avoid conflict or reuse if we want)
 # Robust path finding for Vercel and Local
+session = None
 try:
     # 1. Try finding model in public/models (Development / non-bundled)
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -48,54 +63,53 @@ try:
 
     print(f"Loading ONNX model from {MODEL_PATH}")
     session = ort.InferenceSession(MODEL_PATH)
-    print("Model loaded successfully!")
+    print("API Model loaded successfully!")
 except Exception as e:
-    print(f"Failed to load model: {e}")
+    print(f"Failed to load API model: {e}")
     session = None
 
 def preprocess_image(image_bytes):
     img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
     img = img.resize((256, 256))
     img_array = np.array(img).astype(np.float32) / 255.0
-    
-    # Transpose (H, W, C) -> (C, H, W)
-    img_array = img_array.transpose(2, 0, 1)
-    
-    # Add batch dim -> (1, C, H, W)
-    input_tensor = np.expand_dims(img_array, axis=0)
+    img_array = img_array.transpose(2, 0, 1) # C, H, W
+    input_tensor = np.expand_dims(img_array, axis=0) # Batch
     return input_tensor
+
+@app.on_event("startup")
+async def on_startup():
+    # Initialize Bot resources
+    if bot and load_bot_model:
+        load_bot_model()
+        # Make sure to set webhook URL manually or via helper endpoint
+        print("Bot resources initialized for Webhook mode.")
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "model_loaded": session is not None}
+    return {
+        "status": "ok", 
+        "model_loaded": session is not None,
+        "bot_loaded": bot is not None
+    }
 
-# Redirect root health check to api health check for compatibility
 @app.get("/health")
 def health_check_root():
     return health_check()
 
 @app.post("/api/predict")
 async def predict(file: UploadFile = File(...)):
-    import time
-    start_time = time.time()
-    
     if not session:
         raise HTTPException(status_code=500, detail="Model not loaded")
     
     try:
         contents = await file.read()
-        
         input_tensor = preprocess_image(contents)
         
-        # Run inference
         input_name = session.get_inputs()[0].name
         output_name = session.get_outputs()[0].name
-        
         result = session.run([output_name], {input_name: input_tensor})
         
         logits = result[0][0]
-        
-        # Softmax
         exp_preds = np.exp(logits)
         probs = exp_preds / np.sum(exp_preds)
         
@@ -113,26 +127,19 @@ async def predict(file: UploadFile = File(...)):
         print(f"Prediction error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# For local development compatibility
 @app.post("/predict")
 async def predict_local(file: UploadFile = File(...)):
     return await predict(file)
-
-# ... existing imports
-from pydantic import BaseModel
 
 # Import LLM service
 try:
     from api.llm import generate_disease_report
 except ImportError:
-    # Fallback for local run if running from root without package structure
     try:
         from llm import generate_disease_report
     except:
         print("Warning: Could not import LLM service")
         generate_disease_report = None
-
-# ... existing app and model loading ...
 
 class TextAnalysisRequest(BaseModel):
     class_name: str
@@ -147,9 +154,52 @@ async def analyze_text(request: TextAnalysisRequest):
     report = generate_disease_report(request.class_name, request.confidence, request.top_probs)
     return {"report": report}
 
-@app.post("/analyze-text") # Local compat
+@app.post("/analyze-text")
 async def analyze_text_local(request: TextAnalysisRequest):
     return await analyze_text(request)
+
+# ------------------------------------------------------------------
+# TELEGRAM BOT WEBHOOK
+# ------------------------------------------------------------------
+
+@app.post("/api/webhook/telegram")
+async def telegram_webhook(request: Request):
+    """
+    Handle incoming Telegram updates via Webhook.
+    """
+    if not bot or not dp:
+        return {"status": "error", "message": "Bot not initialized"}
+
+    try:
+        data = await request.json()
+        update = types.Update(**data)
+        await dp.feed_update(bot, update)
+        return {"status": "ok"}
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/set-webhook")
+async def set_webhook():
+    """
+    Helper to set the webhook URL. 
+    Usage: Visit /api/set-webhook?url=https://your-vercel-domain.vercel.app/api/webhook/telegram
+    """
+    if not bot:
+        return {"status": "error", "message": "Bot not initialized"}
+    
+    # We can't easily auto-detect Vercel URL, so we rely on env var or just manual setup via Curl/Browser
+    # But we can try to use WEB_APP_URL from bot/main.py if available.
+    
+    # For now, let's just use the env var passed or default to manual instruction
+    webhook_url = os.getenv("WEBHOOK_URL") 
+    
+    if not webhook_url:
+         return {"status": "warning", "message": "Set WEBHOOK_URL env var to: https://<project>.vercel.app/api/webhook/telegram"}
+
+    await bot.set_webhook(webhook_url)
+    return {"status": "ok", "url": webhook_url}
+
 
 if __name__ == "__main__":
     print("Starting local server...")

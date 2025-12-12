@@ -35,7 +35,7 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, 'public', 'models', 'plant_stress_model.onnx')
+MODEL_PATH = os.path.join(BASE_DIR, 'api', 'plant_stress_model.onnx')
 
 # App URL for Mini App
 WEB_APP_URL = os.getenv("WEB_APP_URL", "https://tryapollo.vercel.app/demo")

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
-from aiogram.types import WebAppInfo
+from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
 from dotenv import load_dotenv
 
 # Add project root to sys.path to allow importing from api
@@ -28,18 +28,16 @@ except ImportError:
 logging.basicConfig(level=logging.INFO)
 
 # Load environment variables
-# Try loading from api/.env if not in root
 env_path = Path(__file__).parent.parent / 'api' / '.env'
 load_dotenv(dotenv_path=env_path)
-load_dotenv() # Also try root .env
+load_dotenv() 
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 MODELS_DIR = Path(__file__).parent.parent / 'public' / 'models'
 MODEL_PATH = MODELS_DIR / 'plant_stress_model.onnx'
 
 # App URL for Mini App
-# Ensure this matches your deployed Vercel URL
-WEB_APP_URL = os.getenv("WEB_APP_URL", "https://tryapollo.vercel.app")
+WEB_APP_URL = os.getenv("WEB_APP_URL", "https://tryapollo.vercel.app/demo")
 
 # Initialize Bot
 if not TOKEN:
@@ -74,12 +72,10 @@ def load_model():
         model_path = base_dir / 'public' / 'models' / 'plant_stress_model.onnx'
         
         if not model_path.exists():
-             # Fallback: check same directory or api directory (serverless often flattens)
              model_path = Path(__file__).parent / 'plant_stress_model.onnx'
         
         if not model_path.exists():
              logging.warning(f"Model not found at {model_path}, trying absolute fallback")
-             # Last ditch: look in current working directory
              model_path = Path('plant_stress_model.onnx')
 
         session = ort.InferenceSession(str(model_path))
@@ -95,6 +91,24 @@ def preprocess_image(image_bytes):
     input_tensor = np.expand_dims(img_array, axis=0)
     return input_tensor
 
+# ------------------------------------------------------------------
+# UI & KEYBOARDS
+# ------------------------------------------------------------------
+
+def get_main_keyboard():
+    """Persistent Main Menu"""
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📷 Analyze Photo")],
+            [
+                KeyboardButton(text="⚠️ Help"),
+                KeyboardButton(text="🌐 Open App", web_app=WebAppInfo(url=WEB_APP_URL))
+            ]
+        ],
+        resize_keyboard=True,
+        persistent=True
+    )
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     # Set the Menu Button (persistent), gracefully handle network errors
@@ -106,15 +120,32 @@ async def cmd_start(message: types.Message):
     except Exception as e:
         logging.warning(f"Failed to set menu button: {e}")
 
-    await message.answer(
-        "👋 **Welcome to Apollo AI Bot!**\n\n"
-        "I'm here to help you detect crop diseases.\n\n"
-        "**How to use:**\n"
-        "📸 **Send a photo**: Just separate/forward a photo of a crop leaf here. I will analyze it using our AI model and give you a report.\n"
-        "📱 **Open App**: Tap the 'Open App' button (bottom left) to use the full dashboard.\n\n"
-        "Try sending a photo now!",
-        parse_mode="Markdown"
+    welcome_text = (
+        "👋 **Welcome to Apollo AI!**\n\n"
+        "I am your automated plant pathologist. I can detect diseases and stress in your crops instantly.\n\n"
+        "**Choose an option below:**\n"
+        "� **Analyze Photo**: Send/Upload an image for analysis.\n"
+        "🌐 **Open App**: Launch the full Apollo dashboard.\n"
+        "⚠️ **Help**: Learn how to use this bot."
     )
+    
+    await message.answer(welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
+
+@dp.message(F.text == "⚠️ Help")
+async def cmd_help(message: types.Message):
+    help_text = (
+        "**How to use Apollo AI Bot:**\n\n"
+        "1. Tap **📷 Analyze Photo** or just send any image directly.\n"
+        "2. Wait a few seconds for our AI to process the leaf.\n"
+        "3. You'll receive a diagnosis (Disease/Healthy) + Confidence Score.\n"
+        "4. Our AI will also generate expert insights and action advice.\n\n"
+        "Use **🌐 Open App** for a better visual experience!"
+    )
+    await message.answer(help_text, parse_mode="Markdown")
+
+@dp.message(F.text == "📷 Analyze Photo")
+async def cmd_analyze_prompt(message: types.Message):
+    await message.answer("📸 **Please send a clear photo of the crop leaf.**\n\nI will analyze it immediately.", reply_markup=get_main_keyboard(), parse_mode="Markdown")
 
 @dp.message(F.photo)
 async def handle_photo(message: types.Message):

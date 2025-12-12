@@ -183,7 +183,7 @@ async def telegram_webhook(request: Request):
 async def set_webhook():
     """
     Helper to set the webhook URL. 
-    Usage: Visit /api/set-webhook?url=https://your-vercel-domain.vercel.app/api/webhook/telegram
+    Usage: Visit /api/set-webhook?url=https://tryapollo.vercel.app/api/webhook/telegram
     """
     if not bot:
         return {"status": "error", "message": "Bot not initialized"}
@@ -195,7 +195,7 @@ async def set_webhook():
     webhook_url = os.getenv("WEBHOOK_URL") 
     
     if not webhook_url:
-         return {"status": "warning", "message": "Set WEBHOOK_URL env var to: https://<project>.vercel.app/api/webhook/telegram"}
+         return {"status": "warning", "message": "Set WEBHOOK_URL env var to: https://tryapollo.vercel.app/api/webhook/telegram"}
 
     await bot.set_webhook(webhook_url)
     return {"status": "ok", "url": webhook_url}

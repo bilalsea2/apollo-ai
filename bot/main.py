@@ -33,8 +33,9 @@ load_dotenv(dotenv_path=env_path)
 load_dotenv() 
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-MODELS_DIR = Path(__file__).parent.parent / 'public' / 'models'
-MODEL_PATH = MODELS_DIR / 'plant_stress_model.onnx'
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_DIR, 'public', 'models', 'plant_stress_model.onnx')
 
 # App URL for Mini App
 WEB_APP_URL = os.getenv("WEB_APP_URL", "https://tryapollo.vercel.app/demo")
@@ -69,8 +70,7 @@ def load_model():
     try:
         # Robust path finding for Vercel
         base_dir = Path(__file__).parent.parent
-        model_path = base_dir / 'public' / 'models' / 'plant_stress_model.onnx'
-        
+        model_path = MODEL_PATH
         if not model_path.exists():
              model_path = Path(__file__).parent / 'plant_stress_model.onnx'
         

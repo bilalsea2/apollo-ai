@@ -71,10 +71,10 @@ def load_model():
         # Robust path finding for Vercel
         base_dir = Path(__file__).parent.parent
         model_path = MODEL_PATH
-        if not model_path.exists():
+        if not os.path.exists(model_path):
              model_path = Path(__file__).parent / 'plant_stress_model.onnx'
         
-        if not model_path.exists():
+        if not os.path.exists(model_path):
              logging.warning(f"Model not found at {model_path}, trying absolute fallback")
              model_path = Path('plant_stress_model.onnx')
 
